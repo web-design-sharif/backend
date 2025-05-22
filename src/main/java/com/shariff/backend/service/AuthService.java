@@ -19,7 +19,6 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public User signUp(SignUpRequest request) {
-        // Check if username or email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
@@ -28,7 +27,6 @@ public class AuthService {
             throw new RuntimeException("Username already exists");
         }
 
-        // Create new user
         User user = new User();
         user.setName(request.getName());
         user.setLastname(request.getLastname());
