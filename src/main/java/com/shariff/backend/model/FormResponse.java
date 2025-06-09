@@ -1,7 +1,15 @@
 package com.shariff.backend.model;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Entity
 @Table(name = "form_response")
 public class FormResponse {
+
     @Id
     private UUID id;
 
@@ -13,5 +21,7 @@ public class FormResponse {
     @JoinColumn(name = "responder_id")
     private User responder;
 
-    private Date submittedAt;
+    @CreationTimestamp
+    @Column(name = "submitted_at", updatable = false)
+    private LocalDateTime submittedAt;
 }

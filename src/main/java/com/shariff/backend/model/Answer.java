@@ -1,7 +1,15 @@
 package com.shariff.backend.model;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Entity
 @Table(name = "answer")
 public class Answer {
+
     @Id
     private UUID id;
 
@@ -13,6 +21,10 @@ public class Answer {
     @JoinColumn(name = "question_id")
     private Question question;
 
+    @Column(name = "answer_text")
     private String answerText;
-    private Date createdAt;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }
