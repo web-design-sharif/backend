@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,6 +18,17 @@ public class Form {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    //    Users who has access to submit this form
+    @ManyToMany
+    @JoinTable(
+            name = "form_submitters",
+            joinColumns = @JoinColumn(name = "form_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> submitters;
+
+    private boolean isPublished;
 
     private String title;
     private String description;
