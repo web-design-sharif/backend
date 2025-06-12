@@ -6,20 +6,19 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "form")
 public class Form {
-
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-    //    Users who has access to submit this form
+    // Users who has access to submit this form
     @ManyToMany
     @JoinTable(
             name = "form_submitters",
@@ -31,7 +30,6 @@ public class Form {
     private boolean isPublished;
 
     private String title;
-    private String description;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

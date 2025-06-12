@@ -5,21 +5,20 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "question")
 public class Question {
-
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "form_id")
     private Form form;
 
-    @Column(name = "question_text")
-    private String questionText;
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "question_type")
     private String questionType;
