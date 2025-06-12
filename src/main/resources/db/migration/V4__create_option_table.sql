@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `option` (
+CREATE TABLE IF NOT EXISTS question_option (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     question_id BIGINT,
     option_text VARCHAR(255),

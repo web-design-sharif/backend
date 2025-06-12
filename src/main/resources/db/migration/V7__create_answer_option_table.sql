@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS answer_option (
     answer_id BIGINT,
     option_id BIGINT,
     FOREIGN KEY (answer_id) REFERENCES answer(id) ON DELETE CASCADE,
-    FOREIGN KEY (option_id) REFERENCES `option`(id)
+    FOREIGN KEY (option_id) REFERENCES question_option(id)
 );
