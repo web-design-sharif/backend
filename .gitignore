@@ -129,3 +129,7 @@ ehthumbs_vista.db
 application-*.properties
 !application.properties
 !application-example.properties
+
+
+
+.mysql_data/
