@@ -8,6 +8,6 @@ public class WelcomeController {
 
     @GetMapping("/")
     public String welcome() {
-        return "Welcome to Web Design Shariff Backend Project";
+        return "Welcome to Web Design Sharif Backend Project";
     }
-} 
+}
