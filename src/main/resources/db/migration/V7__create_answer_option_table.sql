@@ -1,5 +1,7 @@
 CREATE TABLE IF NOT EXISTS answer_option (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    answer_id BIGINT REFERENCES answer(id) ON DELETE CASCADE,
-    option_id BIGINT REFERENCES `option`(id)
+    answer_id BIGINT,
+    option_id BIGINT,
+    FOREIGN KEY (answer_id) REFERENCES answer(id) ON DELETE CASCADE,
+    FOREIGN KEY (option_id) REFERENCES `option`(id)
 );
