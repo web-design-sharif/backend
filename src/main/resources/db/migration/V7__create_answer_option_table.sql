@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS answer_option (
-    id UUID PRIMARY KEY,
-    answer_id UUID REFERENCES answer(id) ON DELETE CASCADE,
-    option_id UUID REFERENCES option(id)
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    answer_id BIGINT REFERENCES answer(id) ON DELETE CASCADE,
+    option_id BIGINT REFERENCES `option`(id)
 );

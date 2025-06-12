@@ -1,8 +1,8 @@
 package com.shariff.backend.model;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS answer (
-    id UUID PRIMARY KEY,
-    form_response_id UUID REFERENCES form_response(id) ON DELETE CASCADE,
-    question_id UUID REFERENCES question(id) ON DELETE CASCADE,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    form_response_id BIGINT REFERENCES form_response(id) ON DELETE CASCADE,
+    question_id BIGINT REFERENCES question(id) ON DELETE CASCADE,
     answer_text TEXT,
-    created_at TIMESTAMP DEFAULT now()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
