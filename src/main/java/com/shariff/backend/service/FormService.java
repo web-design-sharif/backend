@@ -216,8 +216,67 @@ public class FormService {
 
 
     public FormDTO[] getPendingForms(int userId) throws ResponseStatusException {
-        // TODO: implement me
-//        FILTER FOR NOT PUBLISHED
-        return new FormDTO[0];
+        // Retrieve all forms where the user is a submitter
+        List<Form> forms = formRepository.findBySubmittersId(userId);
+
+        // Filter only published forms
+        forms = forms.stream()
+                .filter(Form::isPublished)
+                .toList();
+
+        if (forms.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No pending forms found for this user");
+        }
+
+        List<FormDTO> formDTOList = forms.stream().map(form -> {
+            // Map form details
+            FormDTO formDTO = new FormDTO();
+            formDTO.setId(form.getId());
+            formDTO.setOwnerId(form.getOwner().getId());
+            formDTO.setTitle(form.getTitle());
+            formDTO.setPublished(form.isPublished());
+            formDTO.setCreatedAt(form.getCreatedAt());
+            formDTO.setUpdatedAt(form.getUpdatedAt());
+
+            // Map submitters
+            List<UserDTO> submittersDTO = form.getSubmitters().stream().map(user -> {
+                UserDTO userDTO = new UserDTO();
+                userDTO.setId(user.getId());
+                userDTO.setEmail(user.getEmail());
+                return userDTO;
+            }).toList();
+
+            formDTO.setSubmitters(submittersDTO.toArray(new UserDTO[0]));
+
+            // Map questions
+            List<QuestionDTO> questionDTOList = form.getQuestions().stream().map(question -> {
+                QuestionDTO questionDTO = new QuestionDTO();
+                questionDTO.setId(question.getId());
+                questionDTO.setTitle(question.getTitle());
+                questionDTO.setQuestionType(QuestionType.valueOf(question.getQuestionType()));
+                questionDTO.setRequired(question.isRequired());
+                questionDTO.setCreatedAt(question.getCreatedAt());
+                questionDTO.setUpdatedAt(question.getUpdatedAt());
+
+                // Map options
+                List<OptionDTO> optionDTOList = question.getOptions().stream().map(option -> {
+                    OptionDTO optionDTO = new OptionDTO();
+                    optionDTO.setId(option.getId());
+                    optionDTO.setOptionText(option.getOptionText());
+                    return optionDTO;
+                }).toList();
+
+                questionDTO.setOptions(optionDTOList.toArray(new OptionDTO[0]));
+
+                return questionDTO;
+            }).toList();
+
+            formDTO.setQuestion(questionDTOList.toArray(new QuestionDTO[0]));
+
+            return formDTO;
+        }).toList();
+
+        return formDTOList.toArray(new FormDTO[0]);
     }
+
 }
