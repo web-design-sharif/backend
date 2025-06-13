@@ -24,7 +24,7 @@ public class Form {
 
     @ManyToMany
     @JoinTable(
-            name = "form_submitters",
+            name = "form_submissions",
             joinColumns = @JoinColumn(name = "form_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
