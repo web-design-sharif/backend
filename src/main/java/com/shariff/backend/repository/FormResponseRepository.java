@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface FormResponseRepository extends JpaRepository<FormResponse, Integer> {
-    List<FormResponse> findByFormIdAndResponderId(int formId, int responderId);
+    List<FormResponse> findByForm_Id(int formId);
 }
