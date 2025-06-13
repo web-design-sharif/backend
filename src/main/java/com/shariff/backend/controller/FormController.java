@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/form")
+@CrossOrigin(origins = "http://localhost:3000")
 public class FormController {
     private final FormService formService;
 
@@ -34,12 +35,12 @@ public class FormController {
     }
 
     @GetMapping("/my-forms")
-    public FormDTO[] getMyForms(@RequestBody int userId) {
+    public FormDTO[] getMyForms(@RequestParam int userId) {
         return formService.getMyForms(userId);
     }
 
     @GetMapping("/pending-forms")
-    public FormDTO[] getPendingForms(@RequestBody int userId) {
+    public FormDTO[] getPendingForms(@RequestParam int userId) {
         return formService.getPendingForms(userId);
     }
 }
