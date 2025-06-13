@@ -1,5 +1,6 @@
 package com.shariff.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shariff.backend.enums.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,8 @@ public class QuestionDTO {
     private int id;
     private String title;
     private QuestionType questionType;
-    private boolean isRequired;
+    @JsonProperty("isRequired")
+    private boolean required;
     private OptionDTO[] options;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
