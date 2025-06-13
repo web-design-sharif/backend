@@ -24,7 +24,7 @@ public class FormService {
 
     public void create(CreateFormRequestDTO createFormRequestDTO) throws ResponseStatusException {
         // Fetch form owner
-        User owner = userRepository.findById((long) createFormRequestDTO.getUserId())
+        User owner = userRepository.findById(createFormRequestDTO.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Owner user not found"));
 
         Form form = new Form();
@@ -36,7 +36,7 @@ public class FormService {
         List<User> submitters = new java.util.ArrayList<>();
         if (createFormRequestDTO.getFormDTO().getSubmitters() != null) {
             for (UserDTO userDTO : createFormRequestDTO.getFormDTO().getSubmitters()) {
-                User submitter = userRepository.findById((long) userDTO.getId())
+                User submitter = userRepository.findById(userDTO.getId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submitter user not found"));
                 submitters.add(submitter);
             }
