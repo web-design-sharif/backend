@@ -1,12 +1,14 @@
 package com.shariff.backend.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "form_response")
+@Getter
 public class FormResponse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

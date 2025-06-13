@@ -1,6 +1,8 @@
 package com.shariff.backend.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "form")
+@Getter
+@Setter
 public class Form {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,10 +22,9 @@ public class Form {
     @JoinColumn(name = "owner_id")
     private User owner;
 
-    // Users who has access to submit this form
     @ManyToMany
     @JoinTable(
-            name = "form_submitters",
+            name = "form_submissions",
             joinColumns = @JoinColumn(name = "form_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
@@ -38,4 +41,7 @@ public class Form {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Question> questions;
 }
