@@ -20,7 +20,17 @@ public class FormService {
     private final UserRepository userRepository;
 
     public void publish(UserFormRequestDTO userFormRequestDTO) throws ResponseStatusException {
-        // TODO: implement me
+        int formId = userFormRequestDTO.getFormId();
+        int userId = userFormRequestDTO.getUserId();
+
+        Form form = formRepository.findById(formId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Form not found"));
+
+        if (form.getOwner().getId() != userId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to delete this form");
+        }
+        form.setPublished(true);
+        formRepository.save(form);
     }
 
     public void create(CreateFormRequestDTO createFormRequestDTO) throws ResponseStatusException {
@@ -207,6 +217,7 @@ public class FormService {
 
     public FormDTO[] getPendingForms(int userId) throws ResponseStatusException {
         // TODO: implement me
+//        FILTER FOR NOT PUBLISHED
         return new FormDTO[0];
     }
 }
