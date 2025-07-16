@@ -25,12 +25,14 @@ public class FormController {
     }
 
     @DeleteMapping("/delete")
-    public void delete(@RequestBody UserFormRequestDTO userFormRequestDTO) {
+    public void delete(@RequestParam int userId, @RequestParam int formId) {
+        UserFormRequestDTO userFormRequestDTO = new UserFormRequestDTO(formId, userId);
         formService.delete(userFormRequestDTO);
     }
 
     @GetMapping("/id")
-    public FormDTO getById(@RequestBody UserFormRequestDTO userFormRequestDTO) {
+    public FormDTO getById(@RequestParam int userId, @RequestParam int formId) {
+        UserFormRequestDTO userFormRequestDTO = new UserFormRequestDTO(formId, userId);
         return formService.getById(userFormRequestDTO);
     }
 

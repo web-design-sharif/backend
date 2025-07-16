@@ -20,7 +20,8 @@ public class FormResponseController {
     }
 
     @GetMapping("/all-responses")
-    public FormResponseDTO[] getAllResponses(@RequestBody UserFormRequestDTO userFormRequestDTO) {
+    public FormResponseDTO[] getAllResponses(@RequestParam int userId, @RequestParam int formId) {
+        UserFormRequestDTO userFormRequestDTO = new UserFormRequestDTO(formId, userId);
         return formResponseService.getAllResponses(userFormRequestDTO);
     }
 }

@@ -1,36 +1,21 @@
 services:
-  backend:
-    image: hosseinaghaei/web-backend:latest
-    ports:
-      - "${SERVICE_PORT}:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/shariff_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-    depends_on:
-      - mysql
-    networks:
-      - shariff-network
-    restart: always
-
   mysql:
-    image: mysql:8.0
+    image: docker.arvancloud.ir/mysql:8.0
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shariff_db
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: psg
+      MYSQL_PASSWORD: password
     volumes:
-      - ./mysql_data:/var/lib/mysql
-    networks:
-      - shariff-network
+      - ./db:/var/lib/mysql
+    # networks:
+    #   - shariff-network
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: always
-
-networks:
-  shariff-network:
-    name: shariff_prod_network
-    driver: bridge 

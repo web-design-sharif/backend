@@ -29,7 +29,7 @@ public class FormService {
         if (form.getOwner().getId() != userId) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to delete this form");
         }
-        form.setPublished(true);
+        form.setPublished(!form.isPublished());
         formRepository.save(form);
     }
 
@@ -47,7 +47,7 @@ public class FormService {
         List<User> submitters = new java.util.ArrayList<>();
         if (createFormRequestDTO.getFormDTO().getSubmitters() != null) {
             for (UserDTO userDTO : createFormRequestDTO.getFormDTO().getSubmitters()) {
-                User submitter = userRepository.findById(userDTO.getId())
+                User submitter = userRepository.findByEmail(userDTO.getEmail())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submitter user not found"));
                 submitters.add(submitter);
             }
@@ -159,7 +159,7 @@ public class FormService {
         List<Form> forms = formRepository.findByOwner_Id(userId);
 
         if (forms.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No forms found for this user");
+            return new FormDTO[0];
         }
 
         List<FormDTO> formDTOList = forms.stream().map(form -> {
@@ -225,7 +225,7 @@ public class FormService {
                 .toList();
 
         if (forms.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No pending forms found for this user");
+            return new FormDTO[0];
         }
 
         List<FormDTO> formDTOList = forms.stream().map(form -> {
