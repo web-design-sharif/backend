@@ -2,47 +2,72 @@ package com.shariff.backend.controller;
 
 import com.shariff.backend.dto.CreateFormRequestDTO;
 import com.shariff.backend.dto.FormDTO;
-import com.shariff.backend.dto.UserFormRequestDTO;
 import com.shariff.backend.service.FormService;
+import com.shariff.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/form")
-@CrossOrigin(origins = "http://188.121.110.51:3000")
+@RequestMapping("/forms")
+@CrossOrigin(origins = "http://188.121.110.51:3000/")
 public class FormController {
+
     private final FormService formService;
+    private final UserService userService;
 
-    @PostMapping("/publish")
-    public void publish(@RequestBody UserFormRequestDTO userFormRequestDTO) {
-        formService.publish(userFormRequestDTO);
+    private int getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        return userService.getUserIdByEmail(username);
     }
 
-    @PostMapping("/create")
-    public void create(@RequestBody CreateFormRequestDTO createFormRequestDTO) {
-        formService.create(createFormRequestDTO);
+    @PostMapping
+    public ResponseEntity<Void> create(@RequestBody CreateFormRequestDTO createFormRequestDTO) {
+        int userId = getAuthenticatedUserId();
+        formService.create(createFormRequestDTO, userId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/delete")
-    public void delete(@RequestParam int userId, @RequestParam int formId) {
-        UserFormRequestDTO userFormRequestDTO = new UserFormRequestDTO(formId, userId);
-        formService.delete(userFormRequestDTO);
+    @PostMapping("/{formId}/publish")
+    public ResponseEntity<Void> publish(@PathVariable int formId) {
+        int userId = getAuthenticatedUserId();
+        formService.publish(formId, userId);
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/id")
-    public FormDTO getById(@RequestParam int userId, @RequestParam int formId) {
-        UserFormRequestDTO userFormRequestDTO = new UserFormRequestDTO(formId, userId);
-        return formService.getById(userFormRequestDTO);
+    @DeleteMapping("/{formId}")
+    public ResponseEntity<Void> delete(@PathVariable int formId) {
+        int userId = getAuthenticatedUserId();
+        formService.delete(formId, userId);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/my-forms")
-    public FormDTO[] getMyForms(@RequestParam int userId) {
-        return formService.getMyForms(userId);
+    @GetMapping("/{formId}")
+    public ResponseEntity<FormDTO> getById(@PathVariable int formId) {
+        int userId = getAuthenticatedUserId();
+        FormDTO formDTO = formService.getById(formId, userId);
+        return ResponseEntity.ok(formDTO);
     }
 
-    @GetMapping("/pending-forms")
-    public FormDTO[] getPendingForms(@RequestParam int userId) {
-        return formService.getPendingForms(userId);
+    @GetMapping
+    public ResponseEntity<List<FormDTO>> getMyForms() {
+        int userId = getAuthenticatedUserId();
+        List<FormDTO> forms = formService.getMyForms(userId);
+        return ResponseEntity.ok(forms);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<FormDTO>> getPendingForms() {
+        int userId = getAuthenticatedUserId();
+        List<FormDTO> forms = formService.getPendingForms(userId);
+        return ResponseEntity.ok(forms);
     }
 }
