@@ -1,11 +1,12 @@
 package com.shariff.backend.service;
 
+import com.shariff.backend.dto.AuthRequestDTO;
 import com.shariff.backend.dto.UserDTO;
-import com.shariff.backend.exception.InvalidCredentialsException;
-import com.shariff.backend.exception.UserAlreadyExistsException;
 import com.shariff.backend.model.User;
 import com.shariff.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,36 +14,18 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final ModelMapper modelMapper;
 
     public UserDTO signUp(UserDTO userDTO) {
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new UserAlreadyExistsException("User with email " + userDTO.getEmail() + " already exists.");
-        }
-
-        User newUser = User.builder()
-                .email(userDTO.getEmail())
-                .password(userDTO.getPassword())
-                .build();
-
-        User savedUser = userRepository.save(newUser);
-
-        return UserDTO.builder()
-                .id(savedUser.getId())
-                .email(savedUser.getEmail())
-                .build();
+        userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        User user = modelMapper.map(userDTO, User.class);
+        User savedUser = userRepository.save(user);
+        return modelMapper.map(savedUser, UserDTO.class);
     }
 
-    public UserDTO signIn(UserDTO userDTO) {
-        User user = userRepository.findByEmail(userDTO.getEmail())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password."));
-
-        if (!userDTO.getPassword().equals(user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid email or password.");
-        }
-
-        return UserDTO.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .build();
+    public String signIn(AuthRequestDTO authRequestDTO) {
+        return jwtService.generateToken(authRequestDTO.getEmail());
     }
 }
