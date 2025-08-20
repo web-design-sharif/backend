@@ -10,6 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateFormRequestDTO {
-    private int userId;
     private FormDTO formDTO;
 }

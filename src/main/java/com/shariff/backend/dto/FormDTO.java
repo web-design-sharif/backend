@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,8 +17,8 @@ public class FormDTO {
     private int ownerId;
     private String title;
     private boolean isPublished;
-    private UserDTO[] submitters;
-    private QuestionDTO[] question;
+    private List<UserDTO> submitters;
+    private List<QuestionDTO> question;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

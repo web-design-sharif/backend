@@ -10,8 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,23 +20,20 @@ public class FormService {
     private final FormRepository formRepository;
     private final UserRepository userRepository;
 
-    public void publish(UserFormRequestDTO userFormRequestDTO) throws ResponseStatusException {
-        int formId = userFormRequestDTO.getFormId();
-        int userId = userFormRequestDTO.getUserId();
-
+    public void publish(int formId, int userId) {
         Form form = formRepository.findById(formId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Form not found"));
 
         if (form.getOwner().getId() != userId) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to delete this form");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to publish this form");
         }
         form.setPublished(!form.isPublished());
         formRepository.save(form);
     }
 
-    public void create(CreateFormRequestDTO createFormRequestDTO) throws ResponseStatusException {
-        // Fetch form owner
-        User owner = userRepository.findById(createFormRequestDTO.getUserId())
+    public void create(CreateFormRequestDTO createFormRequestDTO, int userId) {
+        // Fetch form owner from JWT token
+        User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Owner user not found"));
 
         Form form = new Form();
@@ -43,8 +41,8 @@ public class FormService {
         form.setTitle(createFormRequestDTO.getFormDTO().getTitle());
         form.setPublished(createFormRequestDTO.getFormDTO().isPublished());
 
-        // Fetch submitters
-        List<User> submitters = new java.util.ArrayList<>();
+        // Fetch submitters by email
+        List<User> submitters = new ArrayList<>();
         if (createFormRequestDTO.getFormDTO().getSubmitters() != null) {
             for (UserDTO userDTO : createFormRequestDTO.getFormDTO().getSubmitters()) {
                 User submitter = userRepository.findByEmail(userDTO.getEmail())
@@ -54,8 +52,8 @@ public class FormService {
         }
         form.setSubmitters(submitters);
 
-        // Prepare questions
-        List<Question> questions = new java.util.ArrayList<>();
+        // Prepare questions and options manually
+        List<Question> questions = new ArrayList<>();
         if (createFormRequestDTO.getFormDTO().getQuestion() != null) {
             for (QuestionDTO questionDTO : createFormRequestDTO.getFormDTO().getQuestion()) {
                 Question question = new Question();
@@ -64,7 +62,7 @@ public class FormService {
                 question.setQuestionType(questionDTO.getQuestionType().name());
                 question.setRequired(questionDTO.isRequired());
 
-                List<QuestionOption> options = new java.util.ArrayList<>();
+                List<QuestionOption> options = new ArrayList<>();
                 if (questionDTO.getOptions() != null) {
                     for (OptionDTO optionDTO : questionDTO.getOptions()) {
                         QuestionOption option = new QuestionOption();
@@ -81,10 +79,7 @@ public class FormService {
         formRepository.save(form);
     }
 
-    public void delete(UserFormRequestDTO userFormRequestDTO) throws ResponseStatusException {
-        int formId = userFormRequestDTO.getFormId();
-        int userId = userFormRequestDTO.getUserId();
-
+    public void delete(int formId, int userId) {
         Form form = formRepository.findById(formId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Form not found"));
 
@@ -94,10 +89,7 @@ public class FormService {
         formRepository.delete(form);
     }
 
-    public FormDTO getById(UserFormRequestDTO userFormRequestDTO) throws ResponseStatusException {
-        int formId = userFormRequestDTO.getFormId();
-        int userId = userFormRequestDTO.getUserId();
-
+    public FormDTO getById(int formId, int userId) {
         Form form = formRepository.findById(formId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Form not found"));
 
@@ -105,7 +97,31 @@ public class FormService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this form");
         }
 
-        // Map Form entity to FormDTO
+        return mapFormEntityToDto(form);
+    }
+
+    public List<FormDTO> getMyForms(int userId) {
+        List<Form> forms = formRepository.findByOwner_Id(userId);
+
+        return forms.stream()
+                .map(this::mapFormEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<FormDTO> getPendingForms(int userId) {
+        List<Form> forms = formRepository.findBySubmittersId(userId);
+
+        List<Form> publishedForms = forms.stream()
+                .filter(Form::isPublished)
+                .toList();
+
+        return publishedForms.stream()
+                .map(this::mapFormEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    // A private helper method to handle manual mapping
+    private FormDTO mapFormEntityToDto(Form form) {
         FormDTO formDTO = new FormDTO();
         formDTO.setId(form.getId());
         formDTO.setOwnerId(form.getOwner().getId());
@@ -114,19 +130,15 @@ public class FormService {
         formDTO.setCreatedAt(form.getCreatedAt());
         formDTO.setUpdatedAt(form.getUpdatedAt());
 
-        // Map Submitters
-        List<UserDTO> submittersDTO = form.getSubmitters().stream().map(user -> {
+        formDTO.setSubmitters(form.getSubmitters().stream().map(user -> {
             UserDTO userDTO = new UserDTO();
             userDTO.setId(user.getId());
             userDTO.setEmail(user.getEmail());
-            userDTO.setPassword(user.getPassword()); // Optional: You may want to hide password
+            userDTO.setPassword(null); // Do not expose password
             return userDTO;
-        }).toList();
+        }).collect(Collectors.toList()));
 
-        formDTO.setSubmitters(submittersDTO.toArray(new UserDTO[0]));
-
-        // Map Questions
-        List<QuestionDTO> questionDTOList = form.getQuestions().stream().map(question -> {
+        formDTO.setQuestion(form.getQuestions().stream().map(question -> {
             QuestionDTO questionDTO = new QuestionDTO();
             questionDTO.setId(question.getId());
             questionDTO.setTitle(question.getTitle());
@@ -135,148 +147,16 @@ public class FormService {
             questionDTO.setCreatedAt(question.getCreatedAt());
             questionDTO.setUpdatedAt(question.getUpdatedAt());
 
-            // Map Options
-            List<OptionDTO> optionDTOList = question.getOptions().stream().map(option -> {
+            questionDTO.setOptions(question.getOptions().stream().map(option -> {
                 OptionDTO optionDTO = new OptionDTO();
                 optionDTO.setId(option.getId());
                 optionDTO.setOptionText(option.getOptionText());
                 return optionDTO;
-            }).toList();
-
-            questionDTO.setOptions(optionDTOList.toArray(new OptionDTO[0]));
+            }).collect(Collectors.toList()));
 
             return questionDTO;
-        }).toList();
-
-        formDTO.setQuestion(questionDTOList.toArray(new QuestionDTO[0]));
+        }).collect(Collectors.toList()));
 
         return formDTO;
     }
-
-
-    public FormDTO[] getMyForms(int userId) throws ResponseStatusException {
-        // Retrieve all forms owned by this user
-        List<Form> forms = formRepository.findByOwner_Id(userId);
-
-        if (forms.isEmpty()) {
-            return new FormDTO[0];
-        }
-
-        List<FormDTO> formDTOList = forms.stream().map(form -> {
-            // Map basic form fields
-            FormDTO formDTO = new FormDTO();
-            formDTO.setId(form.getId());
-            formDTO.setOwnerId(form.getOwner().getId());
-            formDTO.setTitle(form.getTitle());
-            formDTO.setPublished(form.isPublished());
-            formDTO.setCreatedAt(form.getCreatedAt());
-            formDTO.setUpdatedAt(form.getUpdatedAt());
-
-            // Map submitters
-            List<UserDTO> submittersDTO = form.getSubmitters().stream().map(user -> {
-                UserDTO userDTO = new UserDTO();
-                userDTO.setId(user.getId());
-                userDTO.setEmail(user.getEmail());
-                userDTO.setPassword(user.getPassword()); // Optional: Can exclude for security
-                return userDTO;
-            }).toList();
-
-            formDTO.setSubmitters(submittersDTO.toArray(new UserDTO[0]));
-
-            // Map questions
-            List<QuestionDTO> questionDTOList = form.getQuestions().stream().map(question -> {
-                QuestionDTO questionDTO = new QuestionDTO();
-                questionDTO.setId(question.getId());
-                questionDTO.setTitle(question.getTitle());
-                questionDTO.setQuestionType(QuestionType.valueOf(question.getQuestionType()));
-                questionDTO.setRequired(question.isRequired());
-                questionDTO.setCreatedAt(question.getCreatedAt());
-                questionDTO.setUpdatedAt(question.getUpdatedAt());
-
-                // Map options
-                List<OptionDTO> optionDTOList = question.getOptions().stream().map(option -> {
-                    OptionDTO optionDTO = new OptionDTO();
-                    optionDTO.setId(option.getId());
-                    optionDTO.setOptionText(option.getOptionText());
-                    return optionDTO;
-                }).toList();
-
-                questionDTO.setOptions(optionDTOList.toArray(new OptionDTO[0]));
-
-                return questionDTO;
-            }).toList();
-
-            formDTO.setQuestion(questionDTOList.toArray(new QuestionDTO[0]));
-
-            return formDTO;
-        }).toList();
-
-        return formDTOList.toArray(new FormDTO[0]);
-    }
-
-
-    public FormDTO[] getPendingForms(int userId) throws ResponseStatusException {
-        // Retrieve all forms where the user is a submitter
-        List<Form> forms = formRepository.findBySubmittersId(userId);
-
-        // Filter only published forms
-        forms = forms.stream()
-                .filter(Form::isPublished)
-                .toList();
-
-        if (forms.isEmpty()) {
-            return new FormDTO[0];
-        }
-
-        List<FormDTO> formDTOList = forms.stream().map(form -> {
-            // Map form details
-            FormDTO formDTO = new FormDTO();
-            formDTO.setId(form.getId());
-            formDTO.setOwnerId(form.getOwner().getId());
-            formDTO.setTitle(form.getTitle());
-            formDTO.setPublished(form.isPublished());
-            formDTO.setCreatedAt(form.getCreatedAt());
-            formDTO.setUpdatedAt(form.getUpdatedAt());
-
-            // Map submitters
-            List<UserDTO> submittersDTO = form.getSubmitters().stream().map(user -> {
-                UserDTO userDTO = new UserDTO();
-                userDTO.setId(user.getId());
-                userDTO.setEmail(user.getEmail());
-                return userDTO;
-            }).toList();
-
-            formDTO.setSubmitters(submittersDTO.toArray(new UserDTO[0]));
-
-            // Map questions
-            List<QuestionDTO> questionDTOList = form.getQuestions().stream().map(question -> {
-                QuestionDTO questionDTO = new QuestionDTO();
-                questionDTO.setId(question.getId());
-                questionDTO.setTitle(question.getTitle());
-                questionDTO.setQuestionType(QuestionType.valueOf(question.getQuestionType()));
-                questionDTO.setRequired(question.isRequired());
-                questionDTO.setCreatedAt(question.getCreatedAt());
-                questionDTO.setUpdatedAt(question.getUpdatedAt());
-
-                // Map options
-                List<OptionDTO> optionDTOList = question.getOptions().stream().map(option -> {
-                    OptionDTO optionDTO = new OptionDTO();
-                    optionDTO.setId(option.getId());
-                    optionDTO.setOptionText(option.getOptionText());
-                    return optionDTO;
-                }).toList();
-
-                questionDTO.setOptions(optionDTOList.toArray(new OptionDTO[0]));
-
-                return questionDTO;
-            }).toList();
-
-            formDTO.setQuestion(questionDTOList.toArray(new QuestionDTO[0]));
-
-            return formDTO;
-        }).toList();
-
-        return formDTOList.toArray(new FormDTO[0]);
-    }
-
 }
