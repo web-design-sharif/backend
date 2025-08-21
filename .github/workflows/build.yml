@@ -46,6 +46,6 @@ jobs:
           script: |
             cd workspace/backend/
             sudo echo -e "nameserver 178.22.122.100\nnameserver 185.51.200.2\noptions edns0 trust-ad\nsearch ." | sudo tee /etc/resolv.conf
-            sudo docker-compose pull
-            sudo docker-compose down
-            sudo docker-compose up -d
+            sudo docker compose pull
+            sudo docker compose down
+            sudo docker compose up -d
