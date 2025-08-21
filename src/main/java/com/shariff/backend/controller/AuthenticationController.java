@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@CrossOrigin(origins = "http://188.121.110.51:3000")
+@CrossOrigin(origins = "http://185.226.119.237:3000")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
